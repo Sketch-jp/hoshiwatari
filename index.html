@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a24">
+<meta name="description" content="タップひとつで星から星へ。輪のふちをかすめて「ギリギリ！」を重ねる、日替わりコースのワンタップゲーム。">
+<title>ほしわたり</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='38' cy='36' r='18' fill='%23ffb86b'/%3E%3Ccircle cx='38' cy='36' r='27' fill='none' stroke='%237fe7ff' stroke-width='3' stroke-dasharray='5 5'/%3E%3Ccircle cx='14' cy='14' r='6' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<p id="rotate-hint">スマホは縦向きがおすすめ</p>
+<div id="game">
+  <canvas id="canvas" aria-label="ゲーム画面"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="hud-score"><span id="hud-score">0</span><small id="hud-planets">0こ</small></div>
+    <div id="hud-combo" class="hud-combo"></div>
+    <button id="btn-pause" class="icon-btn" aria-label="一時停止">II</button>
+  </div>
+
+  <section id="screen-title" class="screen">
+    <h1 class="logo">ほしわたり</h1>
+    <p class="tagline">タップで 星から星へ。</p>
+    <div class="menu">
+      <button id="btn-daily" class="btn primary">今日のコース<small id="daily-label"></small></button>
+      <button id="btn-free" class="btn">フリーコース<small>毎回ちがう星空</small></button>
+    </div>
+    <p class="records">今日のベスト <b id="best-daily">0</b>　／　自己ベスト <b id="best-all">0</b></p>
+    <div class="sub-menu">
+      <button id="btn-help" class="link-btn">あそびかた</button>
+      <button id="btn-records" class="link-btn">自分ランキング</button>
+      <button id="btn-sound" class="link-btn">音：オン</button>
+      <button id="btn-reset" class="link-btn">記録をリセット</button>
+    </div>
+    <div id="reset-confirm" class="reset-confirm hidden" role="group" aria-label="記録のリセット確認">
+      <span>ベスト記録をすべて消しますか？</span>
+      <button id="btn-reset-yes" class="btn danger">消す</button>
+      <button id="btn-reset-no" class="btn">やめる</button>
+    </div>
+  </section>
+
+  <section id="screen-help" class="screen hidden" role="dialog" aria-labelledby="help-title">
+    <h2 id="help-title">あそびかた</h2>
+    <ol class="help-list">
+      <li><span class="help-icon">☄️</span><div><b>タップで とびだす</b><br>彗星は星のまわりを回っています。タップすると、その向きへまっすぐ飛びます。</div></li>
+      <li><span class="help-icon">🪐</span><div><b>輪に入ると つかまる</b><br>次の星の点線の輪に入れば成功。上へ上へと渡っていこう。</div></li>
+      <li><span class="help-icon">✨</span><div><b>ふちをかすめて ギリギリ！</b><br>輪のふちを横からかすめると高得点。続けるとコンボで倍増。次の星を飛び越えて先の星に入れば「とびこし」ボーナス。</div></li>
+      <li><span class="help-icon">⏳</span><div><b>のんびりは きけん</b><br>回っているうちに輪が縮み、ゼロになると墜落します。</div></li>
+    </ol>
+    <p class="help-keys">PC：クリック／スペースキーでも飛べます</p>
+    <button id="btn-help-ok" class="btn primary">わかった！</button>
+  </section>
+
+  <section id="screen-records" class="screen hidden" role="dialog" aria-labelledby="records-title">
+    <h2 id="records-title">自分ランキング</h2>
+    <p class="records-note">このブラウザで遊んだ記録です</p>
+    <h3 id="records-today-label" class="records-h"></h3>
+    <ol id="records-today" class="rec-list"></ol>
+    <h3 class="records-h">歴代（全コース）</h3>
+    <ol id="records-all" class="rec-list"></ol>
+    <button id="btn-records-close" class="btn primary">とじる</button>
+  </section>
+
+  <section id="screen-pause" class="screen hidden" role="dialog" aria-label="一時停止">
+    <h2>一時停止</h2>
+    <div class="menu">
+      <button id="btn-resume" class="btn primary">つづける</button>
+      <button id="btn-restart" class="btn">さいしょから</button>
+      <button id="btn-quit" class="btn">タイトルへ</button>
+    </div>
+  </section>
+
+  <section id="screen-over" class="screen hidden" role="dialog" aria-labelledby="over-title">
+    <p id="over-mode" class="over-mode"></p>
+    <h2 id="over-title" class="over-title">墜落…</h2>
+    <p id="over-rank" class="over-rank"></p>
+    <p id="over-newbest" class="newbest hidden">自己ベスト更新！</p>
+    <div class="over-score"><span id="over-score">0</span><small>点</small></div>
+    <p class="over-detail"><span id="over-planets">0</span>こ わたった ／ ギリギリ <span id="over-graze">0</span>回（最大コンボ <span id="over-combo">0</span>）／ とびこし <span id="over-skip">0</span>回</p>
+    <p id="over-strip" class="over-strip" aria-label="今回の記録"></p>
+    <p class="over-best"><span id="over-dayrank"></span>ベスト <b id="over-best">0</b></p>
+    <div class="menu">
+      <button id="btn-retry" class="btn primary">もう一回</button>
+      <button id="btn-share" class="btn">結果をシェア</button>
+      <button id="btn-title" class="link-btn">タイトルへ</button>
+    </div>
+    <p id="share-msg" class="share-msg" aria-live="polite"></p>
+    <textarea id="share-fallback" class="share-fallback hidden" readonly aria-label="シェア用テキスト"></textarea>
+  </section>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
